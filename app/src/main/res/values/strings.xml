@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Crimson Byproduct</string>
+    <string name="current_date">Current Date</string>
+    <string name="editDayButton">Edit Day</string>
+</resources>
