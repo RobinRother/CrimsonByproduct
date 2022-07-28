@@ -2,4 +2,6 @@
     <string name="app_name">Crimson Byproduct</string>
     <string name="current_date">Current Date</string>
     <string name="editDayButton">Edit Day</string>
+    <string name="submit">Submit</string>
+    <string name="add_some_nice_notes_here">Add some nice Notes here!</string>
 </resources>

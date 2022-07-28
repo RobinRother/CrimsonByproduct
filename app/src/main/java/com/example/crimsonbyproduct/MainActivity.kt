@@ -1,5 +1,6 @@
 package com.example.crimsonbyproduct
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.CalendarView
@@ -7,6 +8,7 @@ import android.widget.CalendarView.OnDateChangeListener
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
     // on below line we are creating
@@ -15,8 +17,9 @@ class MainActivity : AppCompatActivity() {
     lateinit var calendarView: CalendarView
     lateinit var dayEditButton: Button
 
-    var dayContentStorage= DayStorage();
-    var keyDate: String = "Select a date!"
+    //val inputNote = intent.getStringExtra("note")
+    var dayContentStorage= DayStorage(this)
+    var keyDate: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,18 +31,23 @@ class MainActivity : AppCompatActivity() {
         calendarView = findViewById(R.id.calendarView)
         dayEditButton = findViewById(R.id.editDayButton)
 
+        val database = DBProvider(this, null)
+        dayContentStorage.populateFromDatabase(database)
+
+        if(intent != null) {
+            keyDate = intent.getStringExtra("keyDate").toString()
+            dayContentStorage.addEntry(keyDate, Day(intent.getStringExtra("note").toString(), keyDate, true))
+            dayContentStorage.saveToDatabase(database, keyDate)
+        }
+
 
         // on below line we are adding set on
         // date change listener for calendar view.
         calendarView
             .setOnDateChangeListener(
                 OnDateChangeListener { view, year, month, dayOfMonth ->
-                    // In this Listener we are getting values
-                    // such as year, month and day of month
-                    // on below line we are creating a variable
-                    // in which we are adding all the cariables in it.
-                    keyDate = (year.toString() + "_" +
-                            (month + 1).toString() + "_" +
+                    keyDate = ((year).toString() + "_" +
+                            (month +1).toString() + "_" +
                             dayOfMonth.toString())
 
                     // set this date in TextView for Display
@@ -47,11 +55,25 @@ class MainActivity : AppCompatActivity() {
                 })
 
         dayEditButton.setOnClickListener {
-            dayContentStorage.addEntry(keyDate, Day("fun" + keyDate, true))
-            val toast = Toast.makeText(this, dayContentStorage.readEntry(keyDate).note, Toast.LENGTH_SHORT)
+            openNoteInputActivity()
+        }
+    }
+
+    fun openNoteInputActivity() {
+        val editNoteActivityIntent = Intent(this, NoteInputActivity::class.java)
+
+        var savedNote: String = ""
+        try{
+            savedNote = dayContentStorage.readEntry(keyDate).note
+        } catch (e: Exception) {
+            savedNote = ""
+            val toast = Toast.makeText(this, "EXCEPTION: " + e.message, Toast.LENGTH_SHORT)
             toast.show()
         }
 
-
+        editNoteActivityIntent.putExtra("date", keyDate)
+        editNoteActivityIntent.putExtra("savedNote", savedNote)
+        finish()
+        startActivity(editNoteActivityIntent)
     }
 }
