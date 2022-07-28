@@ -6,25 +6,21 @@ import android.widget.Button
 import android.widget.CalendarView
 import android.widget.CalendarView.OnDateChangeListener
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
     // on below line we are creating
     // variables for text view and calendar view
-    lateinit var dateTV: TextView
-    lateinit var calendarView: CalendarView
-    lateinit var dayEditButton: Button
+    private lateinit var noteCountTextView: TextView
+    private lateinit var calendarView: CalendarView
+    private lateinit var dayEditButton: Button
 
     //val inputNote = intent.getStringExtra("note")
-    var dayContentStorage= DayStorage(this)
-    var keyDate: String = ""
+    private var dayContentStorage= DayStorage(this)
+    private var keyDate: String = ""
 
     lateinit var dayDao: DBProvider.DayDao
 
@@ -43,13 +39,16 @@ class MainActivity : AppCompatActivity() {
 
         // initializing variables of
         // list view with their ids.
-        dateTV = findViewById(R.id.idTVDate)
+        noteCountTextView = findViewById(R.id.noteCountTextView)
         calendarView = findViewById(R.id.calendarView)
         dayEditButton = findViewById(R.id.editDayButton)
 
 
         val days: List<DBProvider.Day> = dayDao.getAll()
         dayContentStorage.populateFromDatabase(days)
+
+        val entryCount = dayContentStorage.getEntryCount().toString()
+        noteCountTextView.setText("Currently, there are $entryCount days with notes.")
 
 
         var isFromNoteInput = false
@@ -75,13 +74,10 @@ class MainActivity : AppCompatActivity() {
         // date change listener for calendar view.
         calendarView
             .setOnDateChangeListener(
-                OnDateChangeListener { view, year, month, dayOfMonth ->
+                OnDateChangeListener { _, year, month, dayOfMonth ->
                     keyDate = ((year).toString() + "_" +
                             (month +1).toString() + "_" +
                             dayOfMonth.toString())
-
-                    // set this date in TextView for Display
-                    dateTV.setText(keyDate)
                 })
 
         dayEditButton.setOnClickListener {
@@ -90,15 +86,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun openNoteInputActivity() {
+    private fun openNoteInputActivity() {
         val editNoteActivityIntent = Intent(this, NoteInputActivity::class.java)
-        var savedNote: String = ""
+        var savedNote = ""
         try{
             savedNote = dayContentStorage.readEntry(keyDate).note
         } catch (e: Exception) {
             savedNote = ""
-            val toast = Toast.makeText(this, "EXCEPTION: " + e.message, Toast.LENGTH_SHORT)
-            toast.show()
         }
         finally {
             editNoteActivityIntent.putExtra("date", keyDate)
@@ -107,7 +101,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun updateDatabase(keyDate: String, createNewEntry: Boolean) {
+    private fun updateDatabase(keyDate: String, createNewEntry: Boolean) {
         val databaseDay = dayContentStorage.getDatabaseDay(keyDate)
         if(createNewEntry) {
             dayDao.insertAll(databaseDay)

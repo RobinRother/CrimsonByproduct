@@ -9,6 +9,10 @@ import kotlinx.coroutines.launch
 class DayStorage (var context: AppCompatActivity) {
     private var dayMap = mutableListOf<Day>()
 
+    fun getEntryCount (): Int {
+        return dayMap.size
+    }
+
     // returns true if new entry is created
     fun addEntry(keyDate: String, note: String): Boolean {
         var newId = -1

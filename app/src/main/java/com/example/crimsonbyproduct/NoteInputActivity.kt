@@ -3,9 +3,7 @@ package com.example.crimsonbyproduct
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Button
-import android.widget.EditText
-import android.widget.Toast
+import android.widget.*
 
 class NoteInputActivity : AppCompatActivity() {
     var note: String = ""
@@ -13,6 +11,7 @@ class NoteInputActivity : AppCompatActivity() {
     var date = ""
     lateinit var noteInputWidget: EditText
     lateinit var submitButton: Button
+    lateinit var dateTextView: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,6 +22,9 @@ class NoteInputActivity : AppCompatActivity() {
 
         noteInputWidget = findViewById(R.id.editNoteMultiLine)
         submitButton = findViewById(R.id.submitButton)
+        dateTextView = findViewById(R.id.dateTextView)
+
+        dateTextView.setText("Date: $date")
 
         noteInputWidget.setText(inputNote)
         submitButton.setOnClickListener {

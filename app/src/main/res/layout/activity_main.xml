@@ -9,7 +9,7 @@
     <!--text view for displaying the selected date-->
 
     <TextView
-        android:id="@+id/idTVDate"
+        android:id="@+id/noteCountTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
@@ -32,7 +32,7 @@
         android:layout_marginTop="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/idTVDate" />
+        app:layout_constraintTop_toBottomOf="@+id/noteCountTextView" />
 
     <Button
         android:id="@+id/editDayButton"
