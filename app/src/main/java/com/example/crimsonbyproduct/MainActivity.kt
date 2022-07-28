@@ -8,6 +8,11 @@ import android.widget.CalendarView.OnDateChangeListener
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import androidx.room.Room
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
@@ -21,9 +26,20 @@ class MainActivity : AppCompatActivity() {
     var dayContentStorage= DayStorage(this)
     var keyDate: String = ""
 
+    lateinit var dayDao: DBProvider.DayDao
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+
+        val database = Room.databaseBuilder(
+            applicationContext,
+            DBProvider.AppDatabase::class.java, "database-name"
+        ).allowMainThreadQueries().build()
+
+        dayDao = database.dayDao()
+
 
         // initializing variables of
         // list view with their ids.
@@ -31,14 +47,28 @@ class MainActivity : AppCompatActivity() {
         calendarView = findViewById(R.id.calendarView)
         dayEditButton = findViewById(R.id.editDayButton)
 
-        val database = DBProvider(this, null)
-        dayContentStorage.populateFromDatabase(database)
 
-        if(intent != null) {
-            keyDate = intent.getStringExtra("keyDate").toString()
-            dayContentStorage.addEntry(keyDate, Day(intent.getStringExtra("note").toString(), keyDate, true))
-            dayContentStorage.saveToDatabase(database, keyDate)
+        val days: List<DBProvider.Day> = dayDao.getAll()
+        dayContentStorage.populateFromDatabase(days)
+
+
+        var isFromNoteInput = false
+        if(intent != null ) {
+            isFromNoteInput = intent.getStringExtra("sourceActivityId") == "NoteInputActivity"
         }
+
+        if (isFromNoteInput) {
+            keyDate = intent.getStringExtra("keyDate").toString()
+            val note = intent.getStringExtra("note").toString()
+
+            val newEntryCreated =dayContentStorage.addEntry(keyDate, note)
+            updateDatabase(keyDate, newEntryCreated)
+
+        }
+
+        val date = calendarView.date + (Calendar.MONTH + 1)
+        val readableDateFormat = SimpleDateFormat("yyyy_MM_dd")
+        keyDate = readableDateFormat.format(date)
 
 
         // on below line we are adding set on
@@ -55,13 +85,13 @@ class MainActivity : AppCompatActivity() {
                 })
 
         dayEditButton.setOnClickListener {
+            // openNoteInputActivity()
             openNoteInputActivity()
         }
     }
 
     fun openNoteInputActivity() {
         val editNoteActivityIntent = Intent(this, NoteInputActivity::class.java)
-
         var savedNote: String = ""
         try{
             savedNote = dayContentStorage.readEntry(keyDate).note
@@ -70,10 +100,20 @@ class MainActivity : AppCompatActivity() {
             val toast = Toast.makeText(this, "EXCEPTION: " + e.message, Toast.LENGTH_SHORT)
             toast.show()
         }
+        finally {
+            editNoteActivityIntent.putExtra("date", keyDate)
+            editNoteActivityIntent.putExtra("savedNote", savedNote)
+            startActivity(editNoteActivityIntent)
+        }
+    }
 
-        editNoteActivityIntent.putExtra("date", keyDate)
-        editNoteActivityIntent.putExtra("savedNote", savedNote)
-        finish()
-        startActivity(editNoteActivityIntent)
+    fun updateDatabase(keyDate: String, createNewEntry: Boolean) {
+        val databaseDay = dayContentStorage.getDatabaseDay(keyDate)
+        if(createNewEntry) {
+            dayDao.insertAll(databaseDay)
+        }
+        else {
+            dayDao.updateEntry(databaseDay)
+        }
     }
 }

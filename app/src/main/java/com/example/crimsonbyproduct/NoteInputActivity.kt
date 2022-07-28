@@ -33,10 +33,11 @@ class NoteInputActivity : AppCompatActivity() {
 
     fun openMainActivity() {
         val mainActivityIntent = Intent(this, MainActivity::class.java)
+        mainActivityIntent.putExtra("sourceActivityId", "NoteInputActivity")
         mainActivityIntent.putExtra("note", note)
         mainActivityIntent.putExtra("keyDate", date)
-        finish()
         startActivity(mainActivityIntent)
+        finish()
     }
 
 

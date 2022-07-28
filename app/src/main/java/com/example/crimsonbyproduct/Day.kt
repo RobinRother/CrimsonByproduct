@@ -1,9 +1,3 @@
 package com.example.crimsonbyproduct
 
-class Day (var note: String = "", var keyDate: String = "", var hasNote: Boolean = false){
-
-    fun addNote(inputNote: String = "") : String{
-        this.hasNote = inputNote != ""
-        return inputNote
-    }
-}
+data class Day (var id: Int, var keyDate: String = "", var note: String = ""){}

@@ -2,74 +2,90 @@ package com.example.crimsonbyproduct
 
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class DayStorage (var context: AppCompatActivity) {
-    private var dayMap = mutableMapOf<String, Day>()
+    private var dayMap = mutableListOf<Day>()
 
-    fun addEntry(dateString: String, inputDay: Day): Boolean {
-        return dayMap.put(dateString, inputDay) != null
+    // returns true if new entry is created
+    fun addEntry(keyDate: String, note: String): Boolean {
+        var newId = -1
+        var newEntry = false
+        var entryExists = false
+
+        if (dayMap.isEmpty()) {
+            newId = 1
+            val newDay = Day(newId, keyDate, note)
+            dayMap.add(newDay)
+            newEntry = true
+            entryExists = true
+        }
+        else {
+            dayMap.forEach {
+                if(it.keyDate == keyDate) {
+                    newId = it.id
+                    it.note = note
+                    newEntry = false
+                    entryExists = true
+                }
+            }
+        }
+
+        if (!entryExists) {
+            newId =dayMap.last().id + 1
+            val newDay = Day(newId, keyDate, note)
+            dayMap.add(newDay)
+            newEntry = true
+        }
+
+        return newEntry
     }
 
     fun readEntry(dateString: String): Day {
-        if(!dayMap.any()) {
-            throw Exception("No entries stored yet")
-        }
-        else if(!dayMap.contains(dateString)){
-            throw Exception("No entry for this date found: " + dateString)
+        var returnValue = Day(-1)
+        if(dayMap.isEmpty()) {
+            throw Exception("day container is empty")
         }
         else {
-            return dayMap.getOrElse(dateString){ Day() }
+            dayMap.forEach {
+                if(it.keyDate == dateString) {
+                    returnValue = it
+                }
+            }
+            if (returnValue.id < 1){
+                throw Exception("entry not found: " + dateString)
+            }
+            else {
+                return returnValue
+            }
         }
     }
 
-    fun removeEntry(dateString: String): Boolean {
-        if(!dayMap.any()) {
-            throw Exception("No entries stored yet")
+    fun removeEntry(dateString: String){
+        if(dayMap.isEmpty()) {
+            throw Exception("day container is empty")
         }
-        else if(dayMap.remove(dateString) == null){
-            throw Exception("No entry for this date found: " + dateString)
-        }
-        else {
-            return true
-        }
-    }
-
-    fun saveToDatabase(database: DBProvider, keyDate: String) {
-        try {
-            database.addDay(dayMap.get(keyDate)!!)
-        }
-        catch (e: Exception) {
-            val toast = Toast.makeText(context, "EXCEPTION: " + e.message, Toast.LENGTH_SHORT)
-            toast.show()
+        for (i in 0 until dayMap.size) {
+            if(dayMap[i].keyDate == dateString) {
+                dayMap.removeAt(i)
+            }
         }
     }
 
-    fun populateFromDatabase(database: DBProvider) {
-        // below is the variable for cursor
-        // we have called method to get
-        // all names from our database
-        // and add to name text view
-        val cursor = database.getDay()
-
-        // moving the cursor to first position and
-        // appending value in the text view
-        cursor!!.moveToFirst()
-        var day = Day()
-        day.keyDate = cursor.getString(cursor.getColumnIndex(DBProvider.KEYDATE_COl)) + "\n"
-        day.addNote(cursor.getString(cursor.getColumnIndexOrThrow(DBProvider.NOTE_COL)) + "\n")
-        dayMap.put(day.keyDate, day)
-
-
-        // moving our cursor to next
-        // position and appending values
-        while(cursor.moveToNext()){
-            var nextday = Day()
-            nextday.keyDate = cursor.getString(cursor.getColumnIndexOrThrow(DBProvider.KEYDATE_COl)) + "\n"
-            nextday.addNote(cursor.getString(cursor.getColumnIndexOrThrow(DBProvider.NOTE_COL)) + "\n")
-            dayMap.put(nextday.keyDate, day)
+    fun getDatabaseDay(keyDate: String): DBProvider.Day {
+        if(dayMap.isEmpty()) {
+            throw Exception("day container is empty")
         }
+        val day = readEntry(keyDate)
+        return DBProvider.Day(day.id, day.keyDate, day.note)
+    }
 
-        // at last we close our cursor
-        cursor.close()
+    fun populateFromDatabase(dayQueryResults: List<DBProvider.Day>) {
+        for(i in 0 until dayQueryResults.size) {
+            val day = Day(dayQueryResults[i].did, dayQueryResults[i].keyDate!!, dayQueryResults[i].note!!)
+            dayMap.add(day)
+        }
     }
 }
