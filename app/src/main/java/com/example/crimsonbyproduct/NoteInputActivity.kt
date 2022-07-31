@@ -13,6 +13,7 @@ class NoteInputActivity : AppCompatActivity() {
     lateinit var submitButton: Button
     lateinit var dateTextView: TextView
 
+    // Create the text input and the submit button that opens the main activity
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_note_input)
@@ -33,6 +34,7 @@ class NoteInputActivity : AppCompatActivity() {
         }
     }
 
+    // opens the main activity and passes the entered note to it
     fun openMainActivity() {
         val mainActivityIntent = Intent(this, MainActivity::class.java)
         mainActivityIntent.putExtra("sourceActivityId", "NoteInputActivity")

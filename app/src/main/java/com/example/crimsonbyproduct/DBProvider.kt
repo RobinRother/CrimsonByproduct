@@ -2,7 +2,10 @@ package com.example.crimsonbyproduct
 
 import androidx.room.*
 
+// a database Wrapper that uses the room database library for SQlite
 class DBProvider {
+
+    // define a data entity
     @Entity
     data class Day(
         @PrimaryKey val did: Int,
@@ -10,6 +13,7 @@ class DBProvider {
         @ColumnInfo(name = "note") val note: String?
     )
 
+    // the data access object (the actual wrapper)
     @Dao
     interface DayDao {
         @Query("SELECT * FROM day")
